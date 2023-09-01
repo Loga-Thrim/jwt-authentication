@@ -10,11 +10,11 @@ const jwtSecretKey = "dc7fea60";
 function verifyToken(req) {
   try {
     const token = req.headers.authorization.split("Bearer ")[1];
-    jwt.verify(token, jwtSecretKey);
+    const payload = jwt.verify(token, jwtSecretKey);
 
-    return true;
+    return payload;
   } catch (e) {
-    return false;
+    return {};
   }
 }
 
@@ -24,10 +24,14 @@ app
   .use(cors())
   .use(function (req, res, next) {
     if (req.url === "/login" || req.url === "/signup") return next();
-    if (verifyToken(req)) return next();
+    if (Object.keys(verifyToken(req)).length) return next();
     else res.status(401).json({});
   })
-  .get("/verify-token", (req, res) => res.status(200).end())
+  .get("/verify-token", (req, res) => {
+    const payload = verifyToken(req);
+
+    res.status(200).json(payload);
+  })
   .post("/login", (req, res) => {
     try {
       mongoose
@@ -52,7 +56,13 @@ app
             { expiresIn: "1h" }
           );
 
-          res.status(200).json({ success: true, token });
+          res
+            .status(200)
+            .json({
+              success: true,
+              token,
+              user: { username: user.username, email: user.email },
+            });
         })
         .catch((e) => {
           throw e;
@@ -76,5 +86,32 @@ app
         price: 200,
       },
     ]);
+  })
+  .post("/signup", (req, res) => {
+    try {
+      mongoose
+        .connect(url, { useNewUrlParser: true, useUnifiedTopology: false })
+        .then(async () => {
+          const { username, email, password } = req.body;
+
+          const userSchema = mongoose.model(
+            "users",
+            new mongoose.Schema({
+              username: { type: String },
+              email: { type: String },
+              password: { type: String, select: false },
+            })
+          );
+
+          const user = await userSchema.create({ username, email, password });
+
+          res.status(200).json({ success: true, user });
+        })
+        .catch((e) => {
+          throw e;
+        });
+    } catch (e) {
+      res.send(500);
+    }
   })
   .listen(5000, () => console.log("> App on port 5000."));

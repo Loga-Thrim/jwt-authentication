@@ -23,7 +23,7 @@ export const setupInterceptors = (history, pathname) => {
     function (err) {
       if (pathname === "/login" || pathname === "/signup")
         return Promise.reject(err);
-      if (err.response.status === 401) {
+      if (err.response.status === 401 && pathname !== '/') {
         history.push("/login");
       }
     }

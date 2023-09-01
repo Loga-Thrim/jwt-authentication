@@ -24,6 +24,7 @@ export default function Login() {
       });
 
       document.cookie = `token=${res.data.token}`;
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       history.push("/home");
     } catch (e) {
       alert("Failed to fetch.");

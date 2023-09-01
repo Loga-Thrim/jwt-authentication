@@ -18,10 +18,21 @@ function App() {
             <Home />
           </Route>
           <Route path="/">
-            <h1>Hello </h1>
+            <Index />
           </Route>
         </Switch>
       </Router>
+    </div>
+  );
+}
+
+function Index() {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  return (
+    <div>
+      {user ? <h1>Welcome: {user.email}</h1> : null}
+      <h1>{user ? "You are signined" : "You are not signin"}</h1>
     </div>
   );
 }
